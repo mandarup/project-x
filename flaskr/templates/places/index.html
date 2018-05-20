@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
+    <form method="POST">
+        <input name="text">
+        <input type="submit">
+    </form>
+
     <h2>Hello {{place_name}}!</h2>
 
     <img src="https://maps.googleapis.com/maps/api/staticmap?size=700x300&markers={{place_name}}"
