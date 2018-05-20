@@ -19,15 +19,6 @@ def index():
     return render_template('arxiv/index.html', posts=posts)
 
 
-# @app.route('/arxiv/')
-# def index():
-#     return """
-#     Hello
-#     <a href="https://arxiv.org/">world</a>
-#     """
-
-
-
 def get_post(id, check_author=True):
     post = get_db().execute(
         'SELECT p.id, title, body, created, author_id, username'
