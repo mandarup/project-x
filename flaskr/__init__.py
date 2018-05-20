@@ -1,7 +1,9 @@
 import os
 
 from flask import Flask
-
+from flask import (
+    Blueprint, flash, g, redirect, render_template, request, url_for
+)
 
 def create_app(test_config=None):
     # create and configure the app
@@ -26,20 +28,12 @@ def create_app(test_config=None):
 
     @app.route('/')
     def base():
-        return 'Welcome!'
+        return render_template('base.html')
 
     # a simple page that says hello
     @app.route('/hello')
     def hello():
         return 'Hello, World!'
-
-    @app.route('/wtf')
-    def wtf():
-        return 'WTF!'
-
-    @app.route('/rtp')
-    def rtp():
-        return 'coming soon!'
 
     from . import db
     db.init_app(app)
@@ -50,4 +44,11 @@ def create_app(test_config=None):
     from . import blog
     app.register_blueprint(blog.bp)
     app.add_url_rule('/blog/', endpoint='index')
+
+    from . import arxiv
+    app.register_blueprint(arxiv.bp)
+    app.add_url_rule('/arxiv/', endpoint='index')
+
+    from . import places
+    app.register_blueprint(places.bp)
     return app
