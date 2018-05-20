@@ -8,7 +8,7 @@ from flaskr.db import get_db
 
 bp = Blueprint('blog', __name__)
 
-@bp.route('/')
+@bp.route('/blog/')
 def index():
     db = get_db()
     posts = db.execute(
@@ -19,7 +19,7 @@ def index():
     return render_template('blog/index.html', posts=posts)
 
 
-@bp.route('/create', methods=('GET', 'POST'))
+@bp.route('/blog/create', methods=('GET', 'POST'))
 @login_required
 def create():
     if request.method == 'POST':
