@@ -4,17 +4,17 @@
 {% block content %}
     <!DOCTYPE html>
     <html>
-    <body>
-    <!-- <iframe src="https://www.arxiv.org" style="border:none;"> -->
-    <iframe
-        src="https://www.arxiv.org"
-        onload='javascript:(function(o){
-                    o.style.height=o.contentWindow.document.body.scrollHeight+"px";
-                }(this));'
-        style="height:1000px;width:100%;border:none;overflow:hidden;">
-    </iframe>
-    <p>Your browser does not support iframes.</p>
-    </body>
+        <body>
+            <iframe
+                src="https://www.arxiv.org"
+                onload='javascript:
+                    (function(o){
+                        o.style.height=o.contentWindow.document.body.scrollHeight+"px";
+                    }(this));'
+                style="height:1000px;width:100%;border:none;overflow:hidden;">
+            </iframe>
+            <!-- <p>Your browser does not support iframes.</p> -->
+        </body>
     </html>
 
     {% for post in posts %}
