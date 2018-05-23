@@ -51,4 +51,7 @@ def create_app(test_config=None):
 
     from . import places
     app.register_blueprint(places.bp)
+
+    from . import messages
+    app.register_blueprint(messages.bp)
     return app

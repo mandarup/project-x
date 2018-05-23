@@ -9,6 +9,7 @@
     <li><a href="{{ url_for('places.index') }}">Places</a>
     <li><a href="{{ url_for('blog.index') }}">Blog</a>
     <li><a href="{{ url_for('arxiv.index') }}">Arxiv Reader</a>
+    <li><a href="{{ url_for('messages.index') }}">Contact Us</a>
     {% if g.user %}
       <li><span>{{ g.user['username'] }}</span>
       <li><a href="{{ url_for('auth.logout') }}">Log Out</a>

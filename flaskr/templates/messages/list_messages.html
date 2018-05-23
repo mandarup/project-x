@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block header %}
+  <h1>{% block title %}Messages{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <!-- <h2>Messages</h2> -->
+  {% if messages %}
+
+      {% for message in messages %}
+        <div>
+          <h1>{{ message["body"] }}</h1>
+          <div class="about">by {{ message['who'] }} on {{ message['created'].strftime('%Y-%m-%d') }}</div>
+        </div>
+      {% endfor %}
+
+  {% else %}
+    No messages!
+  {% endif %}
+  <a href="{{ url_for('base') }}">Go back to the main page</a>
+{% endblock %}
