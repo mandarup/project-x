@@ -39,16 +39,20 @@
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
             <li class="nav-item">
-              <a class="nav-link js-scroll-trigger" href="#about">About</a>
+              <!-- <a class="nav-link js-scroll-trigger" href="#about">About</a> -->
+              <a class="nav-link js-scroll-trigger" href="{{ url_for('arxiv.index') }}">Arxiv Reader</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link js-scroll-trigger" href="#services">Services</a>
+              <!-- <a class="nav-link js-scroll-trigger" href="#services">Services</a> -->
+              <a class="nav-link js-scroll-trigger" href="{{ url_for('blog.index') }}">Blog</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link js-scroll-trigger" href="#portfolio">Portfolio</a>
+              <!-- <a class="nav-link js-scroll-trigger" href="#portfolio">Portfolio</a> -->
+              <a class="nav-link js-scroll-trigger" href="{{ url_for('places.index') }}">Places</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link js-scroll-trigger" href="#contact">Contact</a>
+              <!-- <a class="nav-link js-scroll-trigger" href="#contact">Contact</a> -->
+              <a class="nav-link js-scroll-trigger" href="{{ url_for('messages.index') }}">Contact</a>
             </li>
           </ul>
         </div>
@@ -60,7 +64,7 @@
         <div class="row">
           <div class="col-lg-10 mx-auto">
             <h1 class="text-uppercase">
-              <strong>Your Favorite Source of Free Bootstrap Themes</strong>
+              <strong>Arxiv Reader</strong>
             </h1>
             <hr>
           </div>
