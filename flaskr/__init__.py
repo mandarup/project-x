@@ -28,7 +28,7 @@ def create_app(test_config=None):
 
     @app.route('/')
     def index():
-        return render_template('index.html')
+        return render_template('landing/index.html')
 
     # @app.route('/')
     # def base():
@@ -55,6 +55,7 @@ def create_app(test_config=None):
 
     from . import places
     app.register_blueprint(places.bp)
+    app.add_url_rule('/places/', endpoint='index')
 
     from . import messages
     app.register_blueprint(messages.bp)
