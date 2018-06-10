@@ -49,6 +49,10 @@ def create_app(test_config=None):
     app.register_blueprint(arxiv.bp)
     app.add_url_rule('/arxiv/', endpoint='index')
 
+    from . import xritix
+    app.register_blueprint(xritix.bp)
+    # app.add_url_rule('/xritix/', endpoint='index')
+
     from . import places
     app.register_blueprint(places.bp)
 
