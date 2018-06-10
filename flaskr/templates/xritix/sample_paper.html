@@ -1,0 +1,1082 @@
+
+<!-- {% extends 'base.html' %} -->
+
+
+{% block content %}
+    <!DOCTYPE html>
+
+<html >
+<head><title>Instance Hash Segmentation</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="generator" content="TeX4ht (http://www.tug.org/tex4ht/)">
+<meta name="originator" content="TeX4ht (http://www.tug.org/tex4ht/)">
+<!-- html -->
+<meta name="src" content="iSegmentation.tex">
+<meta name="date" content="2018-05-13 15:48:00">
+<link rel="stylesheet" type="text/css" href="iSegmentation.css">
+</head><body
+>
+
+
+<!--l. 34--><p class="indent" >
+
+
+   <div class="maketitle">
+
+
+   <a
+ id="likesection.1"></a><a
+ id="x1-2r1"></a>
+
+
+
+
+
+<h2 class="titleHead">Instance Hash Segmentation</h2>
+<div class="author" >J. D. Curt�<sup><span
+class="cmsy-7">*</span><span
+class="cmmi-7">,</span><span
+class="cmr-7">1</span><span
+class="cmmi-7">,</span><span
+class="cmr-7">2</span><span
+class="cmmi-7">,</span><span
+class="cmr-7">3</span><span
+class="cmmi-7">,</span><span
+class="cmr-7">4</span></sup>, I. C. Zarza<sup><span
+class="cmsy-7">*</span><span
+class="cmmi-7">,</span><span
+class="cmr-7">1</span><span
+class="cmmi-7">,</span><span
+class="cmr-7">2</span><span
+class="cmmi-7">,</span><span
+class="cmr-7">3</span><span
+class="cmmi-7">,</span><span
+class="cmr-7">4</span></sup>, A. J. Smola<sup><span
+class="cmr-7">5</span></sup>, and&#x00A0;L. Van Gool<sup><span
+class="cmr-7">1</span></sup> </div>
+<div class="institute"> <sup><span
+class="cmr-6">1</span></sup><span
+class="cmr-9">Computer Vision Laboratory, Eidgen</span><span
+class="cmr-9">�ssische Technische Hochschule Z</span><span
+class="cmr-9">�rich</span><br />
+<sup><span
+class="cmr-6">2</span></sup><span
+class="cmr-9">Dept. of Computer Science and Engineering, The Chinese University of Hong Kong</span><br />
+<sup><span
+class="cmr-6">3</span></sup><span
+class="cmr-9">Dept. of Electronic Engineering, City University of Hong Kong</span><br />
+<sup><span
+class="cmr-6">4</span></sup><span
+class="cmr-9">The Robotics Institute, Carnegie Mellon</span><br />
+<sup><span
+class="cmr-6">5</span></sup><span
+class="cmr-9">ML Dept., Carnegie Mellon</span><br />
+<span class="email"><span
+class="cmsy-9">{</span><span
+class="cmtt-9">curto,zarza,vangool</span><span
+class="cmsy-9">}</span><span
+class="cmtt-9">@vision.ee.ethz.ch, smola@cs.cmu.edu</span></span><br />
+<sup><span
+class="cmsy-6">*</span></sup><span
+class="cmr-9">Both authors contributed equally </span></div>
+<a
+ id="Q1-1-1"></a>
+<a
+ id="Q1-1-2"></a>
+   </div>
+   <div
+class="abstract"
+>
+     <span
+class="cmbx-9">Abstract.</span> <span
+class="cmr-9">We propose a novel approach to address the Simultaneous</span>
+     <span
+class="cmr-9">Detection  and  Segmentation  problem  introduced  in  [</span><a
+href="#XHariharan14"><span
+class="cmr-9">1</span></a><span
+class="cmr-9">].  Using  the</span>
+     <span
+class="cmr-9">hierarchical  structures  first  presented  in  [</span><a
+href="#XArbelaez11"><span
+class="cmr-9">2</span></a><span
+class="cmr-9">]  we  use  an  efficient  and</span>
+     <span
+class="cmr-9">accurate  procedure  that  exploits  the  hierarchy  feature  information</span>
+     <span
+class="cmr-9">using  Locality  Sensitive  Hashing.  We  build  on  recent  work  that</span>
+     <span
+class="cmr-9">utilizes  convolutional  neural  networks  to  detect  bounding  boxes  in</span>
+     <span
+class="cmr-9">an  image  [</span><a
+href="#XRen15"><span
+class="cmr-9">3</span></a><span
+class="cmr-9">]  and  then  use  the  top  similar  hierarchical  region  that</span>
+     <span
+class="cmr-9">best  fits  each  bounding  box  after  hashing,  we  call  this  approach</span>
+     <span
+class="cmr-9">iSegmentation.  We  then  refine  our  final  segmentation  results  by</span>
+     <span
+class="cmr-9">automatic  hierarchy  pruning.  iSegmentation  introduces  a  train-free</span>
+     <span
+class="cmr-9">alternative to Hypercolumns [</span><a
+href="#XHariharan15"><span
+class="cmr-9">4</span></a><span
+class="cmr-9">]. We conduct extensive experiments on</span>
+     <span
+class="cmr-9">PASCAL VOC 2012 segmentation dataset, showing that iSegmentation</span>
+     <span
+class="cmr-9">gives competitive state-of-the-art object segmentations.</span>
+</div>
+   <h3 class="sectionHead"><span class="titlemark">1   </span> <a
+ id="x1-10001"></a>Introduction</h3>
+<!--l. 62--><p class="noindent" >Detection and Segmentation are key components in any computer vision toolbox. In
+this paper we present a hashing technique to segment an object given its bounding
+box and therefore attain both Detection and Segmentation simultaneously. At its
+heart lies a novel way to retrieve and generate a high quality segmentation, which is
+crucial for a wide variety of computer vision applications. Simply put, we use a
+state-of-the-art convolutional network to detect the objects, but a hashing technique
+build on top a high quality hierarchy of regions to generate the segmentations.
+
+
+<br
+class="newline" />
+<!--l. 65--><p class="indent" >   Object Detection and Segmentation are two popular problems in Computer
+Vision, historically treated as separated tasks. We consider these strongly
+related vision tasks as a unique one: detecting each object in an image and
+assigning to each pixel a binary label inside the corresponding bounding box.
+<br
+class="newline" />
+<!--l. 68--><p class="indent" >   iSegmentation addresses the problem with a surprising different technique that
+deviates from the current norm of using proposal object candidates [<a
+href="#XArbelaez14">5</a>]. In semantic
+segmentation the need for rich information models that entangle some kind of notion
+from the different parts that constitute an object is exacerbated. To alleviate this
+issue we build on the use of a the hierarchical model in [<a
+href="#XArbelaez11">2</a>] and explore the rich
+space of information of the Ultrametric Contour Map in order to find the
+best possible semantic segmentation of the given object. For this task, we
+exploit bounding boxes to facilitate the search task. Hence, we simply hash the
+bounding box patches and retrieve closest nearest neighbors to the given
+objects, obtaining superior instance segmentations, this is where the name
+iSegmentation comes. Using this simple but effective technique we get the
+segmentation mask which is then refined using Hierarchical Section Pruning.
+<br
+class="newline" />
+<!--l. 71--><p class="indent" >   We start from a bounding box detector and refine the object support, as in
+Hariharan et al. in Hypercolumns [<a
+href="#XHariharan15">4</a>]. We propose here a train-free similarity hashing
+alternative to their approach. <br
+class="newline" />
+<!--l. 74--><p class="indent" >   We present a simple yet effective module that leverages the need for a training
+step and can provide segmentations after any given detector. Our approach is to use a
+state-of-the-art region-based CNN detector [<a
+href="#XRen15">3</a>] as prior step to guide the segmentation
+process. <br
+class="newline" />
+<!--l. 76--><p class="indent" >   <span
+class="cmbx-10">Outline: </span>We begin next with a high-level description of the proposed method and
+develop further the idea to propose Hierarchical Section Hashing and Hierarchical
+Section Pruning in Section <a
+href="#x1-10001">1<!--tex4ht:ref: sn:introduction --></a> and Section <a
+href="#x1-30003">3<!--tex4ht:ref: sn:isegmentation --></a>. Prior work follows in Section <a
+href="#x1-20002">2<!--tex4ht:ref: sn:work --></a>. We
+conclude with the evaluation metrics in Section <a
+href="#x1-90004">4<!--tex4ht:ref: sn:er --></a> and a brief discussion in Section <a
+href="#x1-110005">5<!--tex4ht:ref: sn:dn --></a>.
+<br
+class="newline" />
+<!--l. 79--><p class="indent" >   We start with a primer. iSegmentation consists on the following main
+blocks:
+   <ul class="itemize1">
+   <li class="itemize"><span
+class="cmbx-10">Bounding  Box  Object  Detection  </span>We  use  a  convolutional  neural
+   network system [<a
+href="#XRen15">3</a>] to detect all the objects in an image and generate the
+   corresponding bounding boxes. We consider a detected object in an image
+   as each output candidate thresholded by the class level score (benchmarks
+
+
+   specifications in Section <a
+href="#x1-90004">4<!--tex4ht:ref: sn:er --></a>).
+   </li>
+   <li class="itemize"><span
+class="cmbx-10">Hierarchical  Image  Representation  </span>We  represent  the  image  as  a
+   hierarchical region tree representation based on the Ultrametric Contour
+   Map of Arbel�ez et al. [<a
+href="#XArbelaez11">2</a>].
+   </li>
+   <li class="itemize"><span
+class="cmbx-10">Similarity Hashing </span>We develop Hierarchical Section Hashing based on the
+   LSH technique of [<a
+href="#XCharikar02">6</a>].
+   </li>
+   <li class="itemize"><span
+class="cmbx-10">Region Refinement </span>We refine the segmentations by the use of Hierarchical
+   Section Pruning.
+   </li>
+   <li class="itemize"><span
+class="cmbx-10">Evaluation  </span>We   evaluate   the   results   on   the   PASCAL   VOC   2012
+   Segmentation dataset [<a
+href="#XEveringham10">7</a>] using the Jaccard index metric, which measures the
+   average best overlap achieved by a segmentation mask for a ground truth
+   object.</li></ul>
+<!--l. 98--><p class="indent" >   This work is inspired on how humans segment images: they first localize the
+objects they want to segment, they carefully inspect the object on the image by the
+use of their visual system and finally they choose the region that belongs to
+the body of that particular object. We believe that although the problem
+of detection has to be solved by the use of deep learning techniques based
+on convolutional neural networks, the problem of segmenting those objects
+is of a different nature and can be best understood by the use of hashing.
+<br
+class="newline" />
+<!--l. 101--><p class="indent" >   Our main contributions are presented as follows:
+   <ul class="itemize1">
+   <li class="itemize">Novel  approach  to  solve  the  segmentation  task  exploiting  bounding  box
+   object detection using similarity hashing.
+   </li>
+   <li class="itemize">Use of hierarchical structures which are rich on semantic meaning instead of
+   other current state-of-the-art techniques such as proposal object candidate
+   generation.
+   </li>
+   <li class="itemize">No need of training data for the segmentation task under bounding box
+   detection framework, i.e. train-free accurate segmentations.
+   </li>
+   <li class="itemize">State-of-the-art results.</li></ul>
+<!--l. 109--><p class="indent" >   To our knowledge, we are the first to provide a segmentation solution based on a
+hashing technique. This approach leverages the need to optimize over a high
+dimensional space. <br
+class="newline" />
+<!--l. 112--><p class="indent" >   Despite the success of region proposal methods in detection, they have in turn
+arisen as the main computational bottleneck of these approaches. Yet unlike the
+
+
+latter, hierarchical structures derived from the UCM are in comparison inexpensive to
+compute and store. While we continue to use a very fast region-based convolutional
+neural network (R-CNN) to solve the detection task, we propose to solve the
+segmentation problem by exploring efficiently the space generated by a hierarchical
+image representation.
+<!--l. 114--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">2   </span> <a
+ id="x1-20002"></a>Prior Work</h3>
+<!--l. 116--><p class="noindent" >Recent works [<a
+href="#XHariharan14">1</a>], [<a
+href="#XHe17">8</a>] present Object Detection and Segmentation as a single problem.
+The SDS task requires to detect and segment every instance of a category in the
+image. Our work is however more closely related to the Hypercolumns approach in [<a
+href="#XHariharan15">4</a>],
+where they go from bounding boxes to segmented masks. Our approach is
+related in the sense that we propose an alternative that does not require a
+training step and can be used as an off-the-shelf high quality segmenter.
+<br
+class="newline" />
+<!--l. 119--><p class="indent" >   For semantic segmentation [<a
+href="#XArbelaez11">2</a>], [<a
+href="#XArbelaez14">5</a>], [<a
+href="#XChen17">9</a>], there has been several approaches where
+they guide the segmentation process by the use of a prior detector [<a
+href="#XGirshick15">10</a>], [<a
+href="#XRen15">3</a>], [<a
+href="#XRedmon16">11</a>], [<a
+href="#XRedmon17">12</a>],
+[<a
+href="#XHuang17">13</a>]. Recently, this strategy has also presented state-of-the-art results in person
+detection and pose estimation [<a
+href="#XPapandreou17">14</a>]. Our segmenter starts rather than from
+raw pixels, Long et al. [<a
+href="#XLong15">15</a>], or bounding box proposals as in Girshick et al.
+[<a
+href="#XGirshick14">16</a>] and Hariharan et al. [<a
+href="#XHariharan14">1</a>] , from a set of hierarchical regions given by the
+UCM structure. Other techniques rely on a superpixel representation e.g.
+Mostajabi et al. [<a
+href="#XMostajabi15">17</a>]. This is a distinct tactic that works directly on a different
+representation.
+<!--l. 121--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">3   </span> <a
+ id="x1-30003"></a>iSegmentation</h3>
+<!--l. 123--><p class="noindent" >We delve into the details of the iSegmentation construction, Figure <a
+href="#x1-5001r1">1<!--tex4ht:ref: fgr:ihs --></a>.
+<!--l. 125--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">3.1   </span> <a
+ id="x1-40003.1"></a>Bounding Box Object Detection</h4>
+<!--l. 127--><p class="noindent" >We begin by using the R-CNN object detector proposed by Ren et al. in [<a
+href="#XRen15">3</a>], which is
+in turn based on [<a
+href="#XGirshick15">10</a>]. It introduces a Region Proposal Network (RPN) for the
+task of generating detection proposals and then solves the detection task
+by the use of a FAST R-CNN detector. They train a CNN on ImageNet
+Classification and fine-tune the network on the VOC detection set. For our
+experiments, we use the network trained on VOC 2007 and 2012, and evaluate the
+results on the VOC 2012 evaluation set. We use the very deep VGG-16 model
+[<a
+href="#XSimonyan15">18</a>].
+
+
+<!--l. 129--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">3.2   </span> <a
+ id="x1-50003.2"></a>Hierarchical Image Representation</h4>
+<!--l. 131--><p class="noindent" >We consider the hierarchical image representation described in [<a
+href="#XArbelaez14">5</a>]. Considering a
+segmentation of an image into regions that partition its domain <span
+class="cmmi-10">S </span>= <span
+class="cmsy-10">{</span><span
+class="cmmi-10">S</span><sub><span
+class="cmmi-7">i</span></sub><span
+class="cmsy-10">}</span><sub><span
+class="cmmi-7">i</span></sub>. A
+segmentation hierarchy is a family of partitions <span
+class="cmsy-10">{</span><span
+class="cmmi-10">S</span><sup><span
+class="cmsy-7">*</span></sup><span
+class="cmmi-10">,S</span><sup><span
+class="cmr-7">1</span></sup><span
+class="cmmi-10">,</span><span
+class="cmmi-10">&#x2026;</span><span
+class="cmmi-10">,S</span><sup><span
+class="cmmi-7">L</span></sup><span
+class="cmsy-10">} </span>such that: (1) <span
+class="cmmi-10">S</span><sup><span
+class="cmsy-7">*</span></sup> is
+the finest set of superpixels, (2) <span
+class="cmmi-10">S</span><sup><span
+class="cmmi-7">L</span></sup> is the complete domain, and (3) regions from
+coarse levels are unions of regions from fine levels.
+<!--l. 133--><p class="indent" >   <hr class="figure"><div class="figure"
+>
+
+
+<a
+ id="x1-5001r1"></a>
+
+
+<div class="center"
+>
+<!--l. 134--><p class="noindent" >
+<!--l. 135--><p class="noindent" ></div>
+<br /> <div class="caption"
+><span class="id">Figure 1: </span><span
+class="content"><span
+class="cmbx-10">iSegmentation</span>. We construct a hierarchical image representation
+based on the UCM and &#8217;train&#8217; the HSH map by hashing each of the parent
+partition node regions. To retrieve a segmentation mask, we &#8217;test&#8217; the HSH map
+by doing a lookup of the detected bounding box region, i.e. a fast approximate
+nearest neighbor search on the hierarchical structure, and finally refine the result
+through HSP.</span></div><!--tex4ht:label?: x1-5001r1 -->
+
+
+<!--l. 139--><p class="indent" >   </div><hr class="endfigure">
+   <h4 class="subsectionHead"><span class="titlemark">3.3   </span> <a
+ id="x1-60003.3"></a>Hierarchical Section Hashing</h4>
+<!--l. 143--><p class="noindent" >In this paper we introduce a novel segmentation algorithm that exploits current
+bounding box information to automatically select the best hierarchical region that
+segments the image. We introduce Hierarchical Section Hashing (HSH) which is in
+turn based on Locality-Sensitive Hashing (LSH). This algorithm helps us surpass the
+problem of computational complexity of the k-nearest neighbor rule and allows us to
+do a fast approximate neighbor search in the hierarchical structure of [<a
+href="#XArbelaez11">2</a>].
+<br
+class="newline" />
+<!--l. 146--><p class="indent" >   HSH can be summarized as follows:
+   <ul class="itemize1">
+   <li class="itemize">Detect bounding boxes on an image using an state-of-the-art convolutional
+   neural network structure [<a
+href="#XRen15">3</a>].
+   </li>
+   <li class="itemize">Construct a hierarchical image map by using the Ultrametric Contour Map
+   (UCM) and convey the result as a hierarchical region tree.
+   </li>
+   <li class="itemize">Each hierarchical region is indexed by a number of hash tables using LSH
+   and then constructing a HSH map.
+   </li>
+   <li class="itemize">Each bounding box is hashed into the HSH map to retrieve the approximate
+   nearest neighbor in sublinear time.</li></ul>
+<!--l. 154--><p class="indent" >   iSegmentation has two main steps: first &#8217;train&#8217; the HSH map with all the
+hierarchical regions of the image. Then &#8217;test&#8217; the HSH map with all the detected
+bounding boxes to retrieve the approximate nearest neighbors that segment each of
+the objects in the image. The novelty of this approach is that it provides the best
+hierarchical region provided by the UCM structure that segments the object image.
+iSegmentation exploits bounding box object detection because it relies on the correct
+detection of the object detector.
+<!--l. 156--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">3.4   </span> <a
+ id="x1-70003.4"></a>Hierarchical Section Pruning</h4>
+<!--l. 157--><p class="noindent" >The final piece is to refine the segmentations given by the HSH map by using what we
+call Hierarchical Section Pruning (HSP). <br
+class="newline" />
+<!--l. 160--><p class="indent" >   HSP procedure can be summarized as follows:
+   <ul class="itemize1">
+   <li class="itemize">Once a segmentation mask has been selected for all the objects in the given
+   image, and their bounding boxes recomputed, the bounding box overlap
+   ratio for all box pair combinations, according to the intersection over union
+   criterium, is performed.
+
+
+   </li>
+   <li class="itemize">Those masks that present overlap with other object masks on the same image
+   are hierarchically unselected. We always proceed to unselect the low level
+   hierarchy regions, which by construction enclose a smaller region area and
+   thus a single segmented object, from the high level hierarchy region, which
+   enclose more than one object and a bigger image area.
+   </li>
+   <li class="itemize">Finally, isolated pixels on the mask are erased to preserve a single connected
+   segmentation.</li></ul>
+<!--l. 167--><p class="indent" >   HSP is based on the fact that each segmentation mask represents a node on the
+hierarchical region tree constructed from the UCM. Therefore, hierarchical sections
+containing more than one object represent higher level nodes on the hierarchy. When
+HSP is applied, low level hierarchical regions are unselected from the high level
+hierarchical sections and therefore replaced by mid-low level sections on the same
+region tree structure that represents a single object or a smaller area of the image.
+<br
+class="newline" />
+<!--l. 170--><p class="indent" >   HSH and HSP Visual Examples can be seen in Figure <a
+href="#x1-7001r2">2<!--tex4ht:ref: fgr:hshhsp --></a>.
+<!--l. 172--><p class="indent" >   <hr class="figure"><div class="figure"
+>
+
+
+<a
+ id="x1-7001r2"></a>
+
+
+<div class="center"
+>
+<!--l. 173--><p class="noindent" >
+<!--l. 174--><p class="noindent" ></div>
+<br /> <div class="caption"
+><span class="id">Figure 2: </span><span
+class="content">Left: HSH Visual Example. Right: HSP Visual Example.</span></div><!--tex4ht:label?: x1-7001r2 -->
+
+
+<!--l. 178--><p class="indent" >   </div><hr class="endfigure">
+<!--l. 180--><p class="indent" >   iSegmentation relies on the prior detection and therefore availability of bounding
+boxes for all the objects in a given image. The latter can be very useful as
+iSegmentation can be understood as a simple and effective technique to provide high
+quality segmentations of still images after any available bounding box detector.
+Likewise, you get train-free off-the-shelf accurate segmentations for any given
+bounding box detection method.
+   <h4 class="subsectionHead"><span class="titlemark">3.5   </span> <a
+ id="x1-80003.5"></a>Locality Sensitive Hashing</h4>
+<!--l. 185--><p class="noindent" >Our goal is to retrieve the <span
+class="cmmi-10">k</span>-nearest neighbors of a given hierarchy vector, which we
+call <span
+class="cmti-10">image code</span>. In this setup we are limited by the curse of dimensionality and
+therefore using an exact search is inefficient. Our approach uses an approximate
+nearest neighbor technique: Locality Sensitive Hashing (LSH).
+<!--l. 187--><p class="indent" >   A Locality Sensitive Hash function maps <span
+class="cmmi-10">x </span><span
+class="cmsy-10">&#x2192; </span><span
+class="cmmi-10">h</span>(<span
+class="cmmi-10">x</span>) such that the similarity
+between (<span
+class="cmbx-10">x</span><span
+class="cmmi-10">,</span><span
+class="cmbx-10">y</span>) is preserved as
+<table
+class="align">
+                        <tr><td
+class="align-odd"><span class="bigg"><img
+src="iSegmentation0x.png" alt="||
+||"  class="left" align="middle"></span><img
+src="iSegmentation1x.png" alt="d(h(x),h(y))
+-----------
+  D (x,y)"  class="frac" align="middle"> <span
+class="cmsy-10">- </span>1<span class="bigg"><img
+src="iSegmentation2x.png" alt="||
+||"  class="left" align="middle"></span><span
+class="cmsy-10">&#x2264; </span><span
+class="cmmi-10">&#x03F5;</span></td>                        <td
+class="align-even"></td>                        <td
+class="align-label"><a
+ id="x1-8001r1"></a>(1)                        </td></tr></table>
+which is not possible for all <span
+class="cmmi-10">D</span>(<span
+class="cmbx-10">x</span><span
+class="cmmi-10">,</span><span
+class="cmbx-10">y</span>) but available for instance for euclidean metrics.
+<br
+class="newline" />
+<!--l. 194--><p class="indent" >   We build on the LSH work of [<a
+href="#XCharikar02">6</a>]. LSH is a randomized hashing scheme,
+investigated with the primary goal of <span
+class="cmmi-10">&#x03F5; </span><span
+class="cmsy-10">- </span><span
+class="cmmi-10">R </span>neighbor search. Its main constitutional
+block is a family of locality sensitive functions. We can define <span
+class="cmsy-10"><img
+src="cmsy10-48.png" alt="H" class="10x-x-48" /> </span>of functions
+<span
+class="cmmi-10">h </span>: <span
+class="cmsy-10"><img
+src="cmsy10-58.png" alt="X" class="10x-x-58" /> &#x2192;{</span>0<span
+class="cmmi-10">,</span>1<span
+class="cmsy-10">} </span>is a (<span
+class="cmmi-10">p</span><sub><span
+class="cmr-7">1</span></sub><span
+class="cmmi-10">,p</span><sub><span
+class="cmr-7">2</span></sub><span
+class="cmmi-10">,r,R</span>)-sensitive if, for any <span
+class="cmbx-10">x</span><span
+class="cmmi-10">,</span><span
+class="cmbx-10">y </span><span
+class="cmsy-10">&#x2208;<img
+src="cmsy10-58.png" alt="X" class="10x-x-58" /></span>,
+
+
+<table
+class="align">
+               <tr><td
+class="align-odd"><span
+class="cmmi-10">Pr</span><sub><span
+class="cmmi-7">h</span><span
+class="cmsy-7">~</span><span
+class="cmmi-7">U</span><span
+class="cmr-7">[</span><span
+class="cmsy-7"><img
+src="cmsy7-48.png" alt="H" class="7x-x-48" /></span><span
+class="cmr-7">]</span></sub>(<span
+class="cmmi-10">h</span>(<span
+class="cmbx-10">x</span>) = <span
+class="cmmi-10">h</span>(<span
+class="cmbx-10">y</span>)<span
+class="cmsy-10">|||</span><span
+class="cmbx-10">x </span><span
+class="cmsy-10">- </span><span
+class="cmbx-10">y </span><span
+class="cmsy-10">&#x2264; </span><span
+class="cmmi-10">r</span><span
+class="cmsy-10">||</span>) <span
+class="cmsy-10">&#x2265; </span><span
+class="cmmi-10">p</span><sub><span
+class="cmr-7">1</span></sub><span
+class="cmmi-10">,</span></td>                <td
+class="align-even"></td>               <td
+class="align-label"><a
+ id="x1-8002r2"></a>(2)
+               </td></tr><tr><td
+class="align-odd"><span
+class="cmmi-10">Pr</span><sub><span
+class="cmmi-7">h</span><span
+class="cmsy-7">~</span><span
+class="cmmi-7">U</span><span
+class="cmr-7">[</span><span
+class="cmsy-7"><img
+src="cmsy7-48.png" alt="H" class="7x-x-48" /></span><span
+class="cmr-7">]</span></sub>(<span
+class="cmmi-10">h</span>(<span
+class="cmbx-10">x</span>) = <span
+class="cmmi-10">h</span>(<span
+class="cmbx-10">y</span>)<span
+class="cmsy-10">|||</span><span
+class="cmbx-10">x </span><span
+class="cmsy-10">- </span><span
+class="cmbx-10">y </span><span
+class="cmsy-10">&#x2264; </span><span
+class="cmmi-10">R</span><span
+class="cmsy-10">||</span>) <span
+class="cmsy-10">&#x2265; </span><span
+class="cmmi-10">p</span><sub><span
+class="cmr-7">2</span></sub><span
+class="cmmi-10">,</span></td>               <td
+class="align-even"></td>               <td
+class="align-label"><a
+ id="x1-8003r3"></a>(3)               </td></tr></table>
+<!--l. 200--><p class="indent" >   where these probabilities are chosen from a random choice of <span
+class="cmmi-10">h </span><span
+class="cmsy-10">&#x2208;<img
+src="cmsy10-48.png" alt="H" class="10x-x-48" /></span>.
+<br
+class="newline" />
+<!--l. 203--><p class="indent" >   Algorithm <a
+href="#x1-8006r1">1<!--tex4ht:ref: a:lsh --></a> gives a simple description of the LSH algorithm for the given case
+when the distance of interest is <span
+class="cmmi-10">L</span><sub><span
+class="cmr-7">1</span></sub>, which is the one in use in iSegmentation. The
+family <span
+class="cmsy-10"><img
+src="cmsy10-48.png" alt="H" class="10x-x-48" /> </span>in this case contains axis-parallel stumps, which means the value of an
+<span
+class="cmmi-10">h </span><span
+class="cmsy-10">&#x2208;<img
+src="cmsy10-48.png" alt="H" class="10x-x-48" /> </span>is generated by taking a simple dimension <span
+class="cmmi-10">d </span><span
+class="cmsy-10">&#x2208;{</span>1<span
+class="cmmi-10">,</span><span
+class="cmmi-10">&#x2026;</span><span
+class="cmmi-10">,dim</span>(<span
+class="cmsy-10"><img
+src="cmsy10-58.png" alt="X" class="10x-x-58" /></span>)<span
+class="cmsy-10">} </span>and thresholding
+it with some T:
+<table
+class="align">
+                       <tr><td
+class="align-odd"><span
+class="cmmi-10">h</span><sup><span
+class="cmmi-7">LSH</span></sup> = <img
+src="iSegmentation3x.png" alt="{ 1 if xd &#x2264; T,
+  0 otherwise."  class="left" align="middle"></td>                       <td
+class="align-even"></td>                       <td
+class="align-label"><a
+ id="x1-8004r4"></a>(4)                       </td></tr></table>
+
+
+<!--l. 211--><p class="indent" >   An LSH function <span
+class="cmmi-10">g </span>: <span
+class="cmsy-10"><img
+src="cmsy10-58.png" alt="X" class="10x-x-58" /> &#x2192;{</span>0<span
+class="cmmi-10">,</span>1<span
+class="cmsy-10">}</span><sup><span
+class="cmmi-7">k</span></sup> is formed by independently <span
+class="cmmi-10">k </span>function
+<span
+class="cmmi-10">h</span><sub><span
+class="cmr-7">1</span></sub><span
+class="cmmi-10">,</span><span
+class="cmmi-10">&#x2026;</span><span
+class="cmmi-10">,h</span><sub><span
+class="cmmi-7">k</span></sub> <span
+class="cmsy-10">&#x2208;<img
+src="cmsy10-48.png" alt="H" class="10x-x-48" /></span>. <br
+class="newline" />
+<!--l. 213--><p class="indent" >   That is, we can understand that an example in our hierarchical partition <span
+class="cmmi-10">S</span><sub><span
+class="cmmi-7">i</span></sub> <span
+class="cmsy-10">&#x2208;<img
+src="cmsy10-53.png" alt="S" class="10x-x-53" /></span>
+provides a <span
+class="cmmi-10">k</span>-bit hash key
+<table
+class="align">
+                     <tr><td
+class="align-odd"><span
+class="cmmi-10">g</span>(<span
+class="cmmi-10">S</span><sub><span
+class="cmmi-7">i</span></sub>) = [<span
+class="cmmi-10">h</span><sub><span
+class="cmr-7">1</span></sub>(<span
+class="cmmi-10">S</span><sub><span
+class="cmmi-7">i</span></sub>)<span
+class="cmmi-10">,</span><span
+class="cmmi-10">&#x2026;</span><span
+class="cmmi-10">,h</span><sub><span
+class="cmmi-7">k</span></sub>(<span
+class="cmmi-10">S</span><sub><span
+class="cmmi-7">i</span></sub>)]<span
+class="cmmi-10">.</span></td>                     <td
+class="align-even"></td>                     <td
+class="align-label"><a
+ id="x1-8005r5"></a>(5)                     </td></tr></table>
+<!--l. 218--><p class="indent" >   This process is repeated <span
+class="cmmi-10">l </span>times and produces <span
+class="cmmi-10">l </span>independently constructed hash
+functions <span
+class="cmmi-10">g</span><sub><span
+class="cmr-7">1</span></sub><span
+class="cmmi-10">,</span><span
+class="cmmi-10">&#x2026;</span><span
+class="cmmi-10">,g</span><sub><span
+class="cmmi-7">l</span></sub>. The available reference (&#8217;training&#8217;) data <span
+class="cmmi-10">S </span>are indexed by each one
+of the <span
+class="cmmi-10">l </span>hash functions, producing <span
+class="cmmi-10">l </span>hash tables, i.e. each of the <span
+class="cmmi-10">S</span><sub><span
+class="cmmi-7">i</span></sub> hierarchical
+partitions generated by all the corresponding parents of the hierarchical tree
+structure. <br
+class="newline" />
+<!--l. 221--><p class="indent" >   Once the LSH data structure has been built it can be used to perform a very
+efficient search for approximate neighbors in the following way. When a query <span
+class="cmmi-10">S</span><sub><span
+class="cmr-7">0</span></sub>
+arrives, we compute its key for each hash table <span
+class="cmmi-10">j</span>, and record the examples
+<span
+class="cmmi-10">C </span>= <span
+class="cmsy-10">{</span><span
+class="cmmi-10">S</span><sub><span
+class="cmr-7">1</span></sub><sup><span
+class="cmmi-7">l</span></sup><span
+class="cmmi-10">,</span><span
+class="cmmi-10">&#x2026;</span><span
+class="cmmi-10">,S</span><sub><span
+class="cmmi-7">n</span><sub><span
+class="cmmi-5">l</span></sub></sub><sup><span
+class="cmmi-7">l</span></sup><span
+class="cmsy-10">} </span>resulting from the lookup with that key. In other words, we find
+the &#8217;training&#8217; examples that fell in the same bucket of the <span
+class="cmmi-10">l</span>-th hash table to which <span
+class="cmmi-10">S</span><sub><span
+class="cmr-7">0</span></sub>
+would fall. These <span
+class="cmmi-10">l </span>lookup operations produce a set of candidate matches,
+<span
+class="cmmi-10">C </span>= <span
+class="cmsy-10">&#x222A;</span><sub><span
+class="cmmi-7">j</span><span
+class="cmr-7">=1</span></sub><sup><span
+class="cmmi-7">l</span></sup><span
+class="cmmi-10">C</span><sub><span
+class="cmmi-7">j</span></sub>. If this set is empty, the algorithm reports it and stops. Otherwise, the
+distances between candidate matches and <span
+class="cmmi-10">S</span><sub><span
+class="cmr-7">0</span></sub> are explicitly evaluated, and the
+examples that match the search criteria, which means that are closer to <span
+class="cmmi-10">S</span><sub><span
+class="cmr-7">0</span></sub> than
+(1 + <span
+class="cmmi-10">&#x03F5;</span>)<span
+class="cmmi-10">R</span>, are returned.
+   <div class="algorithm">
+
+
+<!--l. 224--><p class="indent" >   <a
+ id="x1-8006r1"></a><hr class="float"><div class="float"
+>
+
+
+ <div class="caption"
+><span class="id">Algorithm 1: </span><span
+class="content">LSH Algorithm</span></div><!--tex4ht:label?: x1-8006r1 -->
+<span
+class="cmbx-10">Given: </span>Dataset <span
+class="cmmi-10">X </span>= [<span
+class="cmbx-10">x</span><sub><span
+class="cmr-7">1</span></sub><span
+class="cmmi-10">,</span><span
+class="cmbx-10">x</span><sub><span
+class="cmmi-7">N</span></sub>]<span
+class="cmmi-10">,</span><span
+class="cmbx-10">x</span><sub><span
+class="cmmi-7">i</span></sub> <span
+class="cmsy-10">&#x2208; </span><span
+class="msbm-10">&#x211D;</span><sup><span
+class="cmmi-7">dim</span><span
+class="cmr-7">(</span><span
+class="cmr-7">(</span><span
+class="cmmi-7">X</span><span
+class="cmr-7">))</span></sup><span
+class="cmmi-10">.</span><br
+class="newline" /><span
+class="cmbx-10">Given: </span>Number of bits <span
+class="cmmi-10">k</span>, number of tables <span
+class="cmmi-10">l</span>.<br
+class="newline" /><span
+class="cmbx-10">Output: </span>A set of <div class="algorithmic">
+       <span class="label-11.99998pt">
+ <span
+class="cmr-9">1:</span> </span>&#xA0;<span
+class="algorithmic"><span
+class="cmbx-10">for</span>&#x00A0;<span
+class="cmmi-10">j </span>= 1<span
+class="cmmi-10">,</span><span
+class="cmmi-10">&#x2026;</span><span
+class="cmmi-10">,l</span>&#x00A0;<span
+class="cmbx-10">do</span>        </span><br class="algorithmic"/><span class="label-11.99998pt">  <span
+class="cmr-9">2:</span> </span>&#xA0;<span  class="algorithmic">     <span
+class="cmbx-10">for</span>&#x00A0;<span
+class="cmmi-10">i </span>= 1<span
+class="cmmi-10">,</span><span
+class="cmmi-10">&#x2026;</span><span
+class="cmmi-10">,k</span>&#x00A0;<span
+class="cmbx-10">do</span>        </span><br class="algorithmic"/><span class="label-11.99998pt">  <span
+class="cmr-9">3:</span> </span>&#xA0;<span  class="algorithmic">          Randomly (uniformly) draw        <center class="math-display" >    <img  src="iSegmentation4x.png" alt="d &#x2208; {1,...,dim (X )}.    " class="math-display" ></center>        </span><br class="algorithmic"/><span class="label-11.99998pt">  <span
+class="cmr-9">4:</span> </span>&#xA0;<span  class="algorithmic">          Randomly (uniformly) draw        <center class="math-display" >    <img  src="iSegmentation5x.png" alt="min{xd} &#x2264; v &#x2264; max x(d).    " class="math-display" ></center>        </span><br class="algorithmic"/><span class="label-11.99998pt">  <span
+class="cmr-9">5:</span> </span>&#xA0;<span  class="algorithmic">          Let <span
+class="cmmi-10">h</span><sub><span
+class="cmmi-7">i</span></sub><sup><span
+class="cmmi-7">j</span></sup> be the function <span
+class="cmsy-10"><img
+src="cmsy10-58.png" alt="X" class="10x-x-58" /> &#x2192;{</span>0<span
+class="cmmi-10">,</span>1<span
+class="cmsy-10">} </span>defined by    <table  class="align-star">                                   <tr><td  class="align-odd"><span
+class="cmmi-10">h</span><sub><span
+class="cmmi-7">i</span></sub><sup><span
+class="cmmi-7">j</span></sup>(<span
+class="cmbx-10">x</span>) = <img  src="iSegmentation6x.png" alt="{ 1 if x(d) &#x2264; v,   0 otherwise."  class="left" align="middle"></td>                                  <td  class="align-even"></td>                                  <td  class="align-label"></td></tr></table>                                                                                                                                              </span><br class="algorithmic"/><span class="label-11.99998pt">    </span>&#xA0;<span  class="algorithmic">-         <span
+class="cmmi-10">The</span>j<span
+class="cmsy-10">-</span><span
+class="cmmi-10">thLSHfunctionis</span>g&#x02D9;j = [h&#x02D9;1&#x02C6;j, &#x2026;, h&#x02D9;k&#x02C6;j]<span
+class="cmmi-10">.</span>     </span><br class="algorithmic"/><span class="label-11.99998pt"> <span
+class="cmr-9">6:</span></span>&#xA0;<span  class="algorithmic">-
+    </span>
+<!--l. 246--><p class="noindent" ></div>
+
+
+   </div><hr class="endfloat" />
+   </div>
+   <h3 class="sectionHead"><span class="titlemark">4   </span> <a
+ id="x1-90004"></a>Evaluation and Results</h3>
+<!--l. 252--><p class="noindent" >We extensively evaluate iSegmentation on VOC 2012 validation set. Top detections
+from our algorithm can be seen in Figure <a
+href="#x1-9001r3">3<!--tex4ht:ref: fgr:tdetections --></a>.
+<!--l. 254--><p class="indent" >   <hr class="figure"><div class="figure"
+>
+
+
+<a
+ id="x1-9001r3"></a>
+
+
+<div class="center"
+>
+<!--l. 255--><p class="noindent" >
+<!--l. 256--><p class="noindent" ></div>
+<br />  <div class="caption"
+><span class="id">Figure 3:  </span><span
+class="content"><span
+class="cmbx-10">Top  Detections</span>.  Top:  VOC  2012  Ground  Truth.  Bottom:
+iSegmentation.</span></div><!--tex4ht:label?: x1-9001r3 -->
+
+
+<!--l. 260--><p class="indent" >   </div><hr class="endfigure">
+   <h4 class="subsectionHead"><span class="titlemark">4.1   </span> <a
+ id="x1-100004.1"></a>Jaccard Index Metric</h4>
+<!--l. 264--><p class="noindent" >In Table <a
+href="#x1-10001r1">1<!--tex4ht:ref: tbl:metric --></a> we show the results of the Jaccard index metric. This measure represents
+the average best overlap achieved by a candidate for a ground truth object.
+<br
+class="newline" />
+<!--l. 267--><p class="indent" >   iSegmentation with UCM Jaccard at instance level 45.24 % and Jaccard at class
+level 43.05 % . Recall at overlap 0.5 is 43.36 %.
+   <div class="table">
+
+
+<!--l. 269--><p class="indent" >   <a
+ id="x1-10001r1"></a><hr class="float"><div class="float"
+>
+
+
+<div class="center"
+>
+<!--l. 270--><p class="noindent" >
+<!--l. 271--><p class="noindent" ><!--tex4ht:inline--><div class="tabular"> <table id="TBL-1" class="tabular"
+cellspacing="0" cellpadding="0"
+><colgroup id="TBL-1-1g"><col
+id="TBL-1-1"><col
+id="TBL-1-2"><col
+id="TBL-1-3"><col
+id="TBL-1-4"><col
+id="TBL-1-5"><col
+id="TBL-1-6"><col
+id="TBL-1-7"><col
+id="TBL-1-8"><col
+id="TBL-1-9"><col
+id="TBL-1-10"><col
+id="TBL-1-11"><col
+id="TBL-1-12"><col
+id="TBL-1-13"><col
+id="TBL-1-14"><col
+id="TBL-1-15"><col
+id="TBL-1-16"><col
+id="TBL-1-17"><col
+id="TBL-1-18"><col
+id="TBL-1-19"><col
+id="TBL-1-20"><col
+id="TBL-1-21"><col
+id="TBL-1-22"></colgroup><tr
+class="hline"><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td></tr><tr
+ style="vertical-align:baseline;" id="TBL-1-1-"><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-1"
+class="td11">                              </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-2"
+class="td11">Aeroplane</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-3"
+class="td11">Bicycle</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-4"
+class="td11">Bird</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-5"
+class="td11">Boat</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-6"
+class="td11">Bottle</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-7"
+class="td11"> Bus </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-8"
+class="td11"> Car </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-9"
+class="td11"> Cat </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-10"
+class="td11">Chair</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-11"
+class="td11">Cow</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-12"
+class="td11">Table</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-13"
+class="td11">Dog</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-14"
+class="td11">Horse</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-15"
+class="td11">MBike</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-16"
+class="td11">Person</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-17"
+class="td11">Plant</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-18"
+class="td11">Sheep</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-19"
+class="td11">Sofa</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-20"
+class="td11">Train</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-21"
+class="td11"> TV </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-1-22"
+class="td11">Global</td>
+</tr><tr
+class="hline"><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td></tr><tr
+class="hline"><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td></tr><tr
+ style="vertical-align:baseline;" id="TBL-1-2-"><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-1"
+class="td11"><span
+class="cmbx-10">iSegmentation (Instance Level)</span></td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-2"
+class="td11">   45.4    </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-3"
+class="td11">  27.5  </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-4"
+class="td11"> 55.9 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-5"
+class="td11"> 44.2 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-6"
+class="td11"> 42.0  </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-7"
+class="td11">43.2</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-8"
+class="td11">41.3</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-9"
+class="td11">66.3</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-10"
+class="td11"> 31.4 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-11"
+class="td11"> 57.2 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-12"
+class="td11"> 42.3 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-13"
+class="td11">63.3</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-14"
+class="td11"> 43.8 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-15"
+class="td11"> 43.6  </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-16"
+class="td11"> 40.9  </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-17"
+class="td11"> 40.6 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-18"
+class="td11"> 57.2  </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-19"
+class="td11"> 51.2 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-20"
+class="td11"> 48.0 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-21"
+class="td11">54.1</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-2-22"
+class="td11"> 45.2  </td>
+</tr><tr
+class="hline"><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td></tr><tr
+class="hline"><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td></tr><tr
+ style="vertical-align:baseline;" id="TBL-1-3-"><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-1"
+class="td11">  <span
+class="cmbx-10">iSegmentation (Class Level)  </span></td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-2"
+class="td11">   33.3    </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-3"
+class="td11">  18.5  </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-4"
+class="td11"> 48.1 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-5"
+class="td11"> 37.5 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-6"
+class="td11"> 40.7  </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-7"
+class="td11">45.1</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-8"
+class="td11">39.4</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-9"
+class="td11">59.9</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-10"
+class="td11"> 23.3 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-11"
+class="td11"> 51.0 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-12"
+class="td11"> 43.3 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-13"
+class="td11">60.4</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-14"
+class="td11"> 39.8 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-15"
+class="td11"> 43.1  </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-16"
+class="td11"> 34.6  </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-17"
+class="td11"> 37.2 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-18"
+class="td11"> 51.0  </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-19"
+class="td11"> 47.0 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-20"
+class="td11"> 53.6 </td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-21"
+class="td11">54.2</td><td  style="white-space:nowrap; text-align:center;" id="TBL-1-3-22"
+class="td11"> 43.1  </td>
+</tr><tr
+class="hline"><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td></tr><tr
+ style="vertical-align:baseline;" id="TBL-1-4-"><td  style="white-space:nowrap; text-align:center;" id="TBL-1-4-1"
+class="td11">                              </td></tr></table>                                                                                                                                                     </div></div>
+<br /><div class="caption"
+><span class="id">Table&#x00A0;1: </span><span
+class="content"><span
+class="cmbx-10">VOC 2012 Validation Set</span>. Per-class and global Jaccard index metric
+at instance level(<span
+class="cmmi-10">J</span><sub><span
+class="cmmi-7">i</span></sub>).</span></div><!--tex4ht:label?: x1-10001r1 -->
+
+
+   </div><hr class="endfloat" />
+   </div>
+   <h3 class="sectionHead"><span class="titlemark">5   </span> <a
+ id="x1-110005"></a>Discussion</h3>
+<!--l. 289--><p class="noindent" >In this paper we introduce iSegmentation, an instance segmentation algorithm based
+on a hashing technique that exploits bounding box object detection. We show
+iSegmentation achieves compelling results and generates off-the-shelf accurate
+segmentations.
+<!--l. 1--><p class="noindent" >
+   <h3 class="likesectionHead"><a
+ id="x1-120005"></a>References</h3>
+<!--l. 1--><p class="noindent" >
+    <div class="thebibliography">
+    <p class="bibitem" ><span class="biblabel">
+ <a
+ id="XHariharan14"></a>[1] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>Hariharan,  B.,  Arbel�ez,  P.,  Girshick,  R.,  Malik,  J.:   Simultaneous
+    detection and segmentation. In: ECCV. (2014)
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+ <a
+ id="XArbelaez11"></a>[2] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>Arbel�ez, P., Maire, M., Fowlkes, C., Malik, J.: Contour detection and
+    hierarchical image segmentation. In: PAMI. (2011)
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+ <a
+ id="XRen15"></a>[3] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>Ren, S., He, K., Girshick, R., Sun, J.:  Faster r-cnn: Towards real-time
+    object detection with region proposal networks. In: NIPS. (2015)
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+ <a
+ id="XHariharan15"></a>[4] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>Hariharan, B., Arbel�ez, P., Girshick, R., Malik, J.: Hypercolumns for
+    object segmentation and fine-grained localization. In: CVPR. (2015)
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+ <a
+ id="XArbelaez14"></a>[5] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>Arbel�ez,  P.,  Pont-Tuset,  J.,  Barron,  J.T.,  Marques,  F.,  Malik,  J.:
+    Multiscale combinatorial grouping. In: CVPR. (2014)
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+ <a
+ id="XCharikar02"></a>[6] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>Charikar,   M.:      Similarity   estimation   techniques   from   rounding
+    algorithms. In: STOC. (2002)
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+ <a
+ id="XEveringham10"></a>[7] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>Everingham, M., Van Gool, L., Williams, C.K.I., Winn, J., Zisserman,
+    A.: The pascal visual object classes (voc) challenge. In: IJCV. (2010)
+    </p>
+
+
+    <p class="bibitem" ><span class="biblabel">
+ <a
+ id="XHe17"></a>[8] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>He, K., Gkioxari, G., Doll�r, P., Girshick, R.:  Mask r-cnn.  In: ICCV.
+    (2017)
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+ <a
+ id="XChen17"></a>[9] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>Chen,  L.,  Papandreou,  G.,  Kokkinos,  I.,  Murphy,  K.,  Yuille,  A.L.:
+    Deeplab: Semantic image segmentation with deep convolutional nets, atrous
+    convolution, and fully connected crfs. In: PAMI. (2017)
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+<a
+ id="XGirshick15"></a>[10] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>Girshick, R.: Fast r-cnn. In: ICCV. (2015)
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+<a
+ id="XRedmon16"></a>[11] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>Redmon, J., Divvala, S., Girshick, R., Farhadi, A.: You only look once:
+    Unified, real-time object detection. In: CVPR. (2016)
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+<a
+ id="XRedmon17"></a>[12] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>Redmon, J., Farhadi, A.: Yolo9000: Better, faster, stronger. In: CVPR.
+    (2017)
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+<a
+ id="XHuang17"></a>[13] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>Huang,  J.,  Rathod,  V.,  Sun,  C.,  Zhu,  M.,  Korattikara,  A.,  Fathi,
+    A.,  Fischer,  I.,  Wojna,  Z.,  Song,  Y.,  Guadarrama,  S.,  Murphy,  K.:
+    Speed/accuracy trade-offs for modern convolutional object detectors.  In:
+    CVPR. (2017)
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+<a
+ id="XPapandreou17"></a>[14] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>Papandreou,  G.,  Zhu,  T.,  Kanazawa,  N.,  Toshev,  A.,  Tompson,  J.,
+    Bregler, C., Murphy, K.: Towards accurate multi-person pose estimation in
+    the wild. In: CVPR. (2017)
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+<a
+ id="XLong15"></a>[15] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>Long, J., Shelhamer, E., Darrell, T.:  Fully convolutional networks for
+    semantic segmentation. In: CVPR. (2015)
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+<a
+ id="XGirshick14"></a>[16] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>Girshick, R., Donahue, J., Darrell, T., Malik, J.: Rich feature hierarchies
+    for accurate object detection and semantic segmentation. In: CVPR. (2014)
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+<a
+ id="XMostajabi15"></a>[17] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>Mostajabi,  M.,  Yadollahpour,  P.,  Shakhnarovich,  G.:    Feedforward
+    semantic segmentation with zoom-out features. In: CVPR. (2015)
+    </p>
+    <p class="bibitem" ><span class="biblabel">
+<a
+ id="XSimonyan15"></a>[18] <span class="bibsp">&#x00A0;&#x00A0;&#x00A0;</span></span>Simonyan, K., Zisserman, A.:   Very deep convolutional networks for
+    large-scale image recognition. In: ICLR. (2015)
+
+
+</p>
+    </div>
+
+</body></html>
+{% endblock %}
